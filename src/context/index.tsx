@@ -18,7 +18,7 @@ if (!projectId) {
 const metadata = {
   name: 'gybernaty',
   description: 'Gybernaty AppKit',
-  url: 'https://gyber.org/', // origin must match your domain & subdomain
+  url: 'https://gybernaty.vercel.app/', // origin must match your domain & subdomain
   icons: ['https://avatars.githubusercontent.com/u/179229932']
 }
 
