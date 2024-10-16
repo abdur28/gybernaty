@@ -6,6 +6,9 @@ import {Header} from "@/widgets/Header/Header";
 import {Navbar, NavbarMobile} from "@/widgets/Navbar";
 import {Footer} from "@/widgets/Footer/Footer";
 
+import { headers } from 'next/headers' // added
+import ContextProvider from '@/context'
+
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -42,14 +45,17 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const cookies = headers().get('cookie')
   return (
     <html lang="en">
       <body className={montserrat.className}>
-      <Header/>
-      <Navbar/>
-        {children}
-      <Footer />
-      <NavbarMobile/>
+        <ContextProvider cookies={cookies}>
+          <Header/>
+          <Navbar/>
+            {children}
+          <Footer />
+          <NavbarMobile/> 
+        </ContextProvider>
       </body>
     </html>
   )
