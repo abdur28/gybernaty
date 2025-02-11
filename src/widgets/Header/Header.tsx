@@ -1,14 +1,13 @@
 'use client'
 
-import {classNames} from "@/shared/lib/classNames/classNames";
+import { classNames } from "@/shared/lib/classNames/classNames";
 import cls from "./Header.module.scss";
-import React, { useEffect } from "react";
-import {Button, ThemeButton} from "@/shared/ui/Button/Button";
-import {Logo} from "@/shared/ui/Logo/Logo";
-import {NavbarTablet} from "../Navbar";
+import React from "react";
+import { Button, ThemeButton } from "@/shared/ui/Button/Button";
+import { Logo } from "@/shared/ui/Logo/Logo";
+import { NavbarTablet } from "../Navbar";
 import Link from "next/link";
-import Documents from "@/widgets/Documents/ui/Documents";
-import { useAppKit, useAppKitAccount, useWalletInfo } from "@reown/appkit/react";
+import { useAuth } from "@/context/AuthContext";
 
 
 interface HeaderProps {
@@ -16,38 +15,41 @@ interface HeaderProps {
     className?: string;
 }
 
+
 export const Header = ({className = ""}: HeaderProps) => {
-    const w3mButton = useAppKit()
-    const { walletInfo } = useWalletInfo()
-    const { address, isConnected, caipAddress, status } = useAppKitAccount()
+    const { 
+        w3mButton, 
+        walletInfo, 
+        isConnected, 
+        checkUserAccess, 
+        handleWikiRedirect,
+        isCheckingAccess,
+        isWikiLoading,
+        address
+    } = useAuth();
 
-    // console.log(address, isConnected, caipAddress, status)
-
-    const redirect = () => {
-        fetch('/api/auth/authorize', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({address})
-        })
-            // .then(response => response.json())
-            // .then(data => console.log(data))
-    }
-
-    useEffect(() => {
-        if (status === 'connected') {
-            fetch('/api/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({address})
-            })
-                .then(response => response.json())
-                .then(data => console.log(data))
+    const handleDocsClick = async () => {
+        if (!isConnected) {
+            w3mButton.open();
+            return;
         }
-    }, [status])
+    
+        try {
+            const { exists, balance } = await checkUserAccess();
+            
+            if (!exists) {
+                window.location.href = '/register';
+                return;
+            }
+
+            if (balance !== null) {
+                await handleWikiRedirect(address!, balance);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
+
     return (
         <div className={classNames(cls.Header, {}, [className])}>
             <Link href={'/'}>
@@ -55,32 +57,25 @@ export const Header = ({className = ""}: HeaderProps) => {
             </Link>
 
             <div className={cls.btnGroup}>
-                <Documents />
+                <Button 
+                    onClick={handleDocsClick} 
+                    theme={ThemeButton.ORANGE}
+                    disabled={isCheckingAccess || isWikiLoading}
+                >
+                    {isCheckingAccess ? 'Checking Access...' : 
+                     isWikiLoading ? 'Loading Wiki...' : 'Docs'}
+                </Button>
 
-                {/* This is a tes, edit this later. */}
-                {/* <a style={{
-                    "display": "flex",
-                    "alignItems": "center",
-                    "justifyContent": "center",
-                }} href={"http://13.60.232.198:50/"}>
-                    Docs
-                </a> */}
-
-                <button onClick={() => redirect()}>
-                    Docs
-                </button>
-
-
-                {walletInfo === undefined ? <Button onClick={() => w3mButton.open()} theme={ThemeButton.ORANGE} >
-                    Dapp
-                </Button> : <w3m-account-button />}
-
-                {/* Appkit Custom Button */}
-                {/* <w3m-button /> */} 
+                {walletInfo === undefined ? (
+                    <Button onClick={() => w3mButton.open()} theme={ThemeButton.ORANGE}>
+                        Dapp
+                    </Button>
+                ) : (
+                    <w3m-account-button />
+                )}
 
                 <NavbarTablet/>
             </div>
         </div>
     );
 };
-

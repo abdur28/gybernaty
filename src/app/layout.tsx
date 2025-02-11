@@ -8,6 +8,7 @@ import {Footer} from "@/widgets/Footer/Footer";
 
 import { headers } from 'next/headers' // added
 import ContextProvider from '@/context'
+import { AuthProvider } from '@/context/AuthContext'
 
 
 const montserrat = Montserrat({
@@ -50,11 +51,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={montserrat.className}>
         <ContextProvider cookies={cookies}>
-          <Header/>
-          <Navbar/>
-            {children}
-          <Footer />
-          <NavbarMobile/> 
+          <AuthProvider>
+            <Header/>
+            <Navbar/>
+              {children}
+            <Footer />
+            <NavbarMobile/> 
+          </AuthProvider>
         </ContextProvider>
       </body>
     </html>
